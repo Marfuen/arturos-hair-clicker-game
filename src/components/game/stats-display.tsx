@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/game-store';
 import { formatNumber } from '@/utils/format-utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useState } from 'react';
+import { HairVisualization } from './hair-visualization';
 
 export default function StatsDisplay() {
   const hairCount = useGameStore(state => state.hairCount);
@@ -54,7 +55,12 @@ export default function StatsDisplay() {
   return (
     <Card className="h-full flex flex-col">
       <CardHeader className="pb-2 flex-shrink-0">
-        <CardTitle className="text-center md:text-left">Arturo&apos;s Hair Stats</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-center md:text-left">Arturo&apos;s Hair Stats</CardTitle>
+          <div className="hidden md:block">
+            <HairVisualization size="sm" />
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-auto p-3 pt-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
         <div className="grid grid-cols-2 gap-2">

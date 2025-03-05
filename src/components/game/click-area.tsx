@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import { useGameStore } from '@/store/game-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { formatNumber } from '@/utils/format-utils';
+import { HairVisualization } from './hair-visualization';
 
 export default function ClickArea() {
   const clickHead = useGameStore(state => state.clickHead);
@@ -147,42 +147,32 @@ export default function ClickArea() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col items-center justify-center py-2 overflow-auto scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
-        <div 
-          className="relative cursor-pointer transition-transform hover:scale-105"
-          onClick={handleClick}
-        >
-          <div className={cn(
-            "relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-xl transition-all duration-300",
-            getBorderColor(),
-            getGlowColor(),
-            isClicking && "scale-95"
-          )}>
-            <Image
-              src="/images/arturo-head.png"
-              alt="Arturo's Bald Head"
-              fill
-              className="object-cover transition-all"
-              priority
-            />
-            
-            {/* Click effects - moved inside the head container */}
-            {clickEffect && (
-              <div 
-                key={clickEffect.id}
-                className={cn(
-                  "absolute pointer-events-none font-bold text-xl animate-float z-10",
-                  isComboActive ? "text-primary" : "text-primary-foreground"
-                )}
-                style={{ 
-                  left: `${clickEffect.x}px`, 
-                  top: `${clickEffect.y}px`,
-                  fontSize: `${1 + (comboIntensity * 0.5)}rem`, // Bigger text for higher combo
-                }}
-              >
-                +{hairGain}
-              </div>
-            )}
-          </div>
+        <div className="relative">
+          <HairVisualization 
+            onClick={handleClick}
+            isClicking={isClicking}
+            borderColor={getBorderColor()}
+            glowColor={getGlowColor()}
+            showLabel={true}
+          />
+          
+          {/* Click effects */}
+          {clickEffect && (
+            <div 
+              key={clickEffect.id}
+              className={cn(
+                "absolute pointer-events-none font-bold text-xl animate-float z-10",
+                isComboActive ? "text-primary" : "text-primary-foreground"
+              )}
+              style={{ 
+                left: `${clickEffect.x}px`, 
+                top: `${clickEffect.y}px`,
+                fontSize: `${1 + (comboIntensity * 0.5)}rem`, // Bigger text for higher combo
+              }}
+            >
+              +{hairGain}
+            </div>
+          )}
           
           {/* Click power indicator with combo */}
           <div className={cn(
@@ -199,14 +189,14 @@ export default function ClickArea() {
             )}
           </div>
           
-          {/* Combo indicator - moved outside of Arturo's head */}
+          {/* Combo indicator */}
           {isComboActive && (
             <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xl animate-bounce">
               {getComboIcon()}
             </div>
           )}
           
-          {/* Combo ring indicator - visual feedback without making Arturo blink */}
+          {/* Combo ring indicator */}
           {isComboActive && (
             <div className={cn(
               "absolute inset-0 rounded-full border-2 pointer-events-none z-5",
