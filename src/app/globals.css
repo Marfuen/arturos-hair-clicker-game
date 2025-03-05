@@ -1,26 +1,91 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 35 80% 98%;
+    --foreground: 20 50% 20%;
+    --card: 0 0% 100%;
+    --card-foreground: 20 50% 20%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 50% 20%;
+    --primary: 35 92% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 60 10% 90%;
+    --secondary-foreground: 24 9.8% 10%;
+    --muted: 60 10% 90%;
+    --muted-foreground: 25 40% 30%;
+    --accent: 35 92% 90%;
+    --accent-foreground: 24 9.8% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 20 10% 80%;
+    --input: 20 10% 80%;
+    --ring: 35 92% 54%;
+    --radius: 0.75rem;
+  }
+ 
+  .dark {
+    --background: 20 30% 10%;
+    --foreground: 60 30% 90%;
+    --card: 20 30% 15%;
+    --card-foreground: 60 30% 90%;
+    --popover: 20 30% 15%;
+    --popover-foreground: 60 30% 90%;
+    --primary: 35 92% 54%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 12 10% 20%;
+    --secondary-foreground: 60 30% 90%;
+    --muted: 12 10% 20%;
+    --muted-foreground: 60 20% 70%;
+    --accent: 35 50% 30%;
+    --accent-foreground: 60 30% 90%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 12 10% 30%;
+    --input: 12 10% 30%;
+    --ring: 35 92% 54%;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Game animations */
+@keyframes float {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 0.5s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
 }

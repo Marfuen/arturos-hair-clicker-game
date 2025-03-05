@@ -1,0 +1,7 @@
+<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="70" y="50" width="60" height="100" fill="#3498db" rx="10"/>
+      <rect x="80" y="40" width="40" height="20" fill="#2980b9" rx="5"/>
+      <rect x="90" y="30" width="20" height="10" fill="#2980b9" rx="5"/>
+      <rect x="70" y="150" width="60" height="20" fill="#2980b9" rx="5"/>
+      <text x="100" y="110" font-family="Arial" font-size="14" text-anchor="middle" fill="#fff">GROWTH</text>
+    </svg>
