@@ -62,13 +62,19 @@ export function GameContainer() {
   }, []);
   
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 space-y-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 h-[calc(100vh-300px)] min-h-[500px] max-h-[700px]">
+      {/* Stats on the left */}
+      <div className="md:col-span-1 flex flex-col h-full">
         <StatsDisplay />
+      </div>
+      
+      {/* Click area in the center */}
+      <div className="md:col-span-1 flex flex-col h-full">
         <ClickArea />
       </div>
       
-      <div className="lg:col-span-1">
+      {/* Upgrades on the right */}
+      <div className="md:col-span-1 flex flex-col h-full">
         <UpgradeShop />
       </div>
       

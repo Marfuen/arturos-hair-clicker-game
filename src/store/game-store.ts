@@ -22,6 +22,7 @@ export interface GameState {
   clickPower: number;
   passiveIncome: number;
   lastUpdated: number;
+  totalClicks: number; // New: Track total number of clicks
 
   // Click combo system
   comboMultiplier: number;
@@ -31,6 +32,10 @@ export interface GameState {
   lastClickTime: number;
   comboTimeWindow: number;
   comboDecayDelay: number;
+  comboWarningTime: number; // New: Time before decay when warning appears
+
+  // Special multipliers
+  offlineGainMultiplier: number;
 
   // Upgrades
   upgrades: Upgrade[];
@@ -46,6 +51,7 @@ export interface GameState {
   calculateOfflineProgress: () => number;
   increaseCombo: () => void;
   decayCombo: () => void;
+  getComboState: () => "inactive" | "active" | "warning" | "decaying"; // New: Get current combo state
 }
 
 // Initial upgrades
@@ -158,6 +164,88 @@ const initialUpgrades: Upgrade[] = [
     owned: 0,
     image: "/images/clone.svg",
   },
+  // New upgrades
+  {
+    id: "hairGalaxy",
+    name: "Hair Galaxy",
+    description: "Generates 2,000 hair per second",
+    cost: 2000000,
+    multiplier: 2.0,
+    owned: 0,
+    image: "/images/galaxy.svg",
+  },
+  {
+    id: "quantumScissors",
+    name: "Quantum Scissors",
+    description: "Increases click power by 200",
+    cost: 5000000,
+    multiplier: 2.1,
+    owned: 0,
+    image: "/images/scissors.svg",
+  },
+  {
+    id: "timeWarp",
+    name: "Time Warp Conditioner",
+    description: "Increases offline gains by 20%",
+    cost: 10000000,
+    multiplier: 2.2,
+    owned: 0,
+    image: "/images/time.svg",
+  },
+  {
+    id: "hairDimension",
+    name: "Hair Dimension",
+    description: "Generates 10,000 hair per second",
+    cost: 50000000,
+    multiplier: 2.3,
+    owned: 0,
+    image: "/images/dimension.svg",
+  },
+  {
+    id: "comboMaster",
+    name: "Combo Master",
+    description: "Increases combo ramp-up speed by 20%",
+    cost: 100000000,
+    multiplier: 2.4,
+    owned: 0,
+    image: "/images/master.svg",
+  },
+  {
+    id: "hairUniverse",
+    name: "Hair Universe",
+    description: "Generates 50,000 hair per second",
+    cost: 500000000,
+    multiplier: 2.5,
+    owned: 0,
+    image: "/images/universe.svg",
+  },
+  {
+    id: "clickNova",
+    name: "Click Nova",
+    description: "Increases click power by 1,000",
+    cost: 1000000000,
+    multiplier: 2.6,
+    owned: 0,
+    image: "/images/nova.svg",
+  },
+  {
+    id: "infiniteStrand",
+    name: "Infinite Strand",
+    description: "Generates 200,000 hair per second",
+    cost: 5000000000,
+    multiplier: 2.7,
+    owned: 0,
+    image: "/images/infinite.svg",
+  },
+  {
+    id: "hairGod",
+    name: "Hair God",
+    description: "Increases all production by 50%",
+    cost: 10000000000,
+    multiplier: 3.0,
+    owned: 0,
+    image: "/images/god.svg",
+  },
 ];
 
 type GamePersistOptions = PersistOptions<GameState, GameState>;
@@ -193,23 +281,29 @@ export const useGameStore = create<GameState>()(
       clickPower: 1,
       passiveIncome: 0,
       lastUpdated: Date.now(),
+      totalClicks: 0,
       upgrades: initialUpgrades,
       selectedPurchaseAmount: 1,
+
+      // Special multipliers
+      offlineGainMultiplier: 1.0,
 
       // Combo system initial state
       comboMultiplier: 1,
       maxComboMultiplier: 5, // Maximum multiplier (5x)
       comboRampUpRate: 0.05, // How fast the combo increases per click (slower ramp up)
-      comboDecayRate: 0.5, // How fast the combo decays per second (faster ramp down)
+      comboDecayRate: 0.3, // Increased from 0.2 to 0.3 for more noticeable decay
       lastClickTime: 0,
       comboTimeWindow: 1000, // Time window in ms to consider clicks as combo (1 second)
-      comboDecayDelay: 2000, // Delay in ms before combo starts decaying (2 seconds)
+      comboDecayDelay: 2500, // Reduced from 3000 to 2500 ms for quicker decay start
+      comboWarningTime: 1200, // Reduced from 1500 to 1200 ms for earlier warning
 
       // Click action
       clickHead: () => {
         set((state: GameState) => ({
           hairCount: state.hairCount + state.clickPower * state.comboMultiplier,
           lastClickTime: Date.now(),
+          totalClicks: state.totalClicks + 1, // Increment total clicks
         }));
 
         // Increase combo after click
@@ -237,18 +331,26 @@ export const useGameStore = create<GameState>()(
       // Decay combo over time
       decayCombo: () => {
         const now = Date.now();
-        const { lastClickTime, comboDecayDelay } = get();
+        const { lastClickTime, comboDecayDelay, comboMultiplier } = get();
+        const timeSinceLastClick = now - lastClickTime;
 
-        // Only decay if we haven't clicked for a while
-        if (now - lastClickTime > comboDecayDelay) {
-          set((state: GameState) => {
-            // Reduce combo multiplier, but not below 1
-            const newCombo = Math.max(
-              state.comboMultiplier - state.comboDecayRate * (1 / 60), // Adjust for 60fps
-              1
-            );
-            return { comboMultiplier: newCombo };
-          });
+        // Only decay if we haven't clicked for a while and combo is active
+        if (timeSinceLastClick > comboDecayDelay && comboMultiplier > 1) {
+          // Calculate how long we've been in decay state
+          const decayTime = timeSinceLastClick - comboDecayDelay;
+
+          // Calculate decay amount based on how long we've been decaying
+          // The longer we've been decaying, the faster it drops
+          // Reduced the ramp-up time from 5000ms to 3000ms for faster decay
+          const decayFactor = Math.min(2, decayTime / 3000); // Ramp up decay over 3 seconds, max 2x multiplier
+          const decayAmount =
+            get().comboDecayRate * (1 / 60) * (1 + decayFactor);
+
+          // Reduce combo multiplier, but not below 1
+          const newCombo = Math.max(comboMultiplier - decayAmount, 1);
+
+          // Update the state with the new combo value
+          set({ comboMultiplier: newCombo });
         }
       },
 
@@ -390,6 +492,10 @@ export const useGameStore = create<GameState>()(
             newClickPower += u.owned * 10;
           } else if (u.id === "hairResearch") {
             newClickPower += u.owned * 50;
+          } else if (u.id === "quantumScissors") {
+            newClickPower += u.owned * 200;
+          } else if (u.id === "clickNova") {
+            newClickPower += u.owned * 1000;
           }
           // Passive income upgrades
           else if (u.id === "shampoo") {
@@ -404,6 +510,14 @@ export const useGameStore = create<GameState>()(
             newPassiveIncome += u.owned * 200;
           } else if (u.id === "hairCloner") {
             newPassiveIncome += u.owned * 500;
+          } else if (u.id === "hairGalaxy") {
+            newPassiveIncome += u.owned * 2000;
+          } else if (u.id === "hairDimension") {
+            newPassiveIncome += u.owned * 10000;
+          } else if (u.id === "hairUniverse") {
+            newPassiveIncome += u.owned * 50000;
+          } else if (u.id === "infiniteStrand") {
+            newPassiveIncome += u.owned * 200000;
           }
           // Combo upgrades
           else if (u.id === "comboBooster") {
@@ -411,8 +525,40 @@ export const useGameStore = create<GameState>()(
           } else if (u.id === "comboExtender") {
             // Reduce decay rate by 10% per upgrade (multiplicative)
             newComboDecayRate = 0.5 * Math.pow(0.9, u.owned);
+          } else if (u.id === "comboMaster") {
+            // This is handled separately below
           }
         });
+
+        // Apply special effects for certain upgrades
+        let offlineGainMultiplier = 1.0;
+        let comboRampUpMultiplier = 1.0;
+        let productionMultiplier = 1.0;
+
+        // Check for special upgrades
+        newUpgrades.forEach((u: Upgrade) => {
+          if (u.id === "timeWarp" && u.owned > 0) {
+            // Each Time Warp Conditioner adds 20% to offline gains
+            offlineGainMultiplier += u.owned * 0.2;
+          }
+
+          if (u.id === "comboMaster" && u.owned > 0) {
+            // Each Combo Master increases combo ramp-up speed by 20%
+            comboRampUpMultiplier += u.owned * 0.2;
+          }
+
+          if (u.id === "hairGod" && u.owned > 0) {
+            // Each Hair God increases all production by 50%
+            productionMultiplier += u.owned * 0.5;
+          }
+        });
+
+        // Apply production multiplier to passive income and click power
+        newPassiveIncome = Math.floor(newPassiveIncome * productionMultiplier);
+        newClickPower = Math.floor(newClickPower * productionMultiplier);
+
+        // Calculate new combo ramp up rate with the multiplier
+        const newComboRampUpRate = 0.05 * comboRampUpMultiplier;
 
         set({
           hairCount: hairCount - totalCost,
@@ -421,6 +567,9 @@ export const useGameStore = create<GameState>()(
           clickPower: newClickPower,
           maxComboMultiplier: newMaxComboMultiplier,
           comboDecayRate: newComboDecayRate,
+          comboRampUpRate: newComboRampUpRate,
+          // Store the offline gain multiplier in the state
+          offlineGainMultiplier: offlineGainMultiplier,
         });
       },
 
@@ -437,21 +586,29 @@ export const useGameStore = create<GameState>()(
           clickPower: 1,
           passiveIncome: 0,
           lastUpdated: Date.now(),
+          totalClicks: 0,
           upgrades: initialUpgrades,
           comboMultiplier: 1,
           lastClickTime: 0,
           selectedPurchaseAmount: 1,
+          offlineGainMultiplier: 1.0,
+          comboRampUpRate: 0.05,
+          maxComboMultiplier: 5,
+          comboDecayRate: 0.3,
         });
       },
 
       // Calculate offline progress
       calculateOfflineProgress: () => {
-        const { lastUpdated, passiveIncome } = get();
+        const { lastUpdated, passiveIncome, offlineGainMultiplier } = get();
         const now = Date.now();
         const timeDiff = (now - lastUpdated) / 1000; // in seconds
 
         if (timeDiff > 0 && passiveIncome > 0) {
-          const offlineEarnings = Math.floor(passiveIncome * timeDiff);
+          // Apply the offline gain multiplier
+          const offlineEarnings = Math.floor(
+            passiveIncome * timeDiff * offlineGainMultiplier
+          );
 
           set((state: GameState) => ({
             hairCount: state.hairCount + offlineEarnings,
@@ -464,6 +621,32 @@ export const useGameStore = create<GameState>()(
 
         set({ lastUpdated: now });
         return 0;
+      },
+
+      // Get current combo state
+      getComboState: () => {
+        const {
+          comboMultiplier,
+          lastClickTime,
+          comboWarningTime,
+          comboDecayDelay,
+        } = get();
+        const now = Date.now();
+        const timeSinceLastClick = now - lastClickTime;
+
+        // If combo is not active, return inactive
+        if (comboMultiplier <= 1) {
+          return "inactive";
+        }
+
+        // Check time thresholds
+        if (timeSinceLastClick < comboWarningTime) {
+          return "active";
+        } else if (timeSinceLastClick < comboDecayDelay) {
+          return "warning";
+        } else {
+          return "decaying";
+        }
       },
     }),
     {
@@ -488,7 +671,7 @@ export const useGameStore = create<GameState>()(
             let newPassiveIncome = 0;
             let newClickPower = 1;
             let newMaxComboMultiplier = 5;
-            let newComboDecayRate = 0.5;
+            let newComboDecayRate = 0.3;
 
             state.upgrades.forEach((u: Upgrade) => {
               // Click power upgrades
@@ -520,7 +703,7 @@ export const useGameStore = create<GameState>()(
                 newMaxComboMultiplier = 5 + u.owned * 0.5;
               } else if (u.id === "comboExtender") {
                 // Reduce decay rate by 10% per upgrade (multiplicative)
-                newComboDecayRate = 0.5 * Math.pow(0.9, u.owned);
+                newComboDecayRate = 0.3 * Math.pow(0.9, u.owned);
               }
             });
 
@@ -544,8 +727,8 @@ export function setupGameTick(): void {
     const delta = (now - lastTick) / 1000; // in seconds
     lastTick = now;
 
+    // Update passive income
     const { passiveIncome } = useGameStore.getState();
-
     if (passiveIncome > 0) {
       useGameStore.setState((state: GameState) => ({
         hairCount: state.hairCount + state.passiveIncome * delta,
@@ -553,11 +736,17 @@ export function setupGameTick(): void {
       }));
     }
 
-    // Decay combo multiplier
-    useGameStore.getState().decayCombo();
+    // Decay combo multiplier - ensure this is called every frame
+    try {
+      useGameStore.getState().decayCombo();
+    } catch (error) {
+      console.error("Error decaying combo:", error);
+    }
 
+    // Continue the game loop
     requestAnimationFrame(gameTick);
   };
 
+  // Start the game loop
   requestAnimationFrame(gameTick);
 }

@@ -5,19 +5,20 @@ import Image from 'next/image';
 import { useGameStore } from '@/store/game-store';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { formatNumber } from '@/utils/format-utils';
 
 export default function ClickArea() {
   const clickHead = useGameStore(state => state.clickHead);
   const clickPower = useGameStore(state => state.clickPower);
   const comboMultiplier = useGameStore(state => state.comboMultiplier);
   const maxComboMultiplier = useGameStore(state => state.maxComboMultiplier);
-  const lastClickTime = useGameStore(state => state.lastClickTime);
-  const comboDecayDelay = useGameStore(state => state.comboDecayDelay);
+  const getComboState = useGameStore(state => state.getComboState);
+  const totalClicks = useGameStore(state => state.totalClicks);
   
   const [clickEffect, setClickEffect] = useState<{ x: number; y: number; id: number } | null>(null);
   const [effectCounter, setEffectCounter] = useState(0);
   const [isClicking, setIsClicking] = useState(false);
-  const [timeSinceClick, setTimeSinceClick] = useState(0);
+  const [comboState, setComboState] = useState<"inactive" | "active" | "warning" | "decaying">("inactive");
   
   // Format the actual hair gain with combo applied
   const hairGain = Math.floor(clickPower * comboMultiplier);
@@ -28,21 +29,21 @@ export default function ClickArea() {
   // Calculate combo intensity for visual effects (0-1 scale)
   const comboIntensity = (comboMultiplier - 1) / (maxComboMultiplier - 1);
   
-  // Update time since last click
+  // Update combo state
   useEffect(() => {
-    if (!isComboActive) return;
-    
+    // Update combo state more frequently to ensure smooth transitions
     const interval = setInterval(() => {
-      const now = Date.now();
-      const elapsed = now - lastClickTime;
-      setTimeSinceClick(elapsed);
-    }, 100);
+      const newState = getComboState();
+      setComboState(newState);
+      
+      // Debug output to help diagnose issues
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Combo state:', newState, 'Multiplier:', comboMultiplier.toFixed(2));
+      }
+    }, 50); // Update more frequently (50ms instead of 100ms)
     
     return () => clearInterval(interval);
-  }, [isComboActive, lastClickTime]);
-  
-  // Determine if combo is about to decay
-  const isComboDecaying = timeSinceClick >= comboDecayDelay;
+  }, [getComboState, comboMultiplier]);
   
   const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // Get click position relative to the target element
@@ -73,34 +74,85 @@ export default function ClickArea() {
     }
   }, [clickEffect]);
   
-  // Get dynamic glow color based on combo intensity
+  // Get dynamic glow color based on combo state
   const getGlowColor = () => {
     if (!isComboActive) return 'shadow-primary/0';
-    if (isComboDecaying) return 'shadow-red-500/50';
     
-    // Glow with primary color when combo is active
-    return `shadow-primary/50`;
+    switch (comboState) {
+      case "active":
+        return 'shadow-primary/50';
+      case "warning":
+        return 'shadow-yellow-500/50';
+      case "decaying":
+        return 'shadow-red-500/50';
+      default:
+        return 'shadow-primary/0';
+    }
   };
   
   // Get dynamic border color based on combo state
   const getBorderColor = () => {
     if (!isComboActive) return 'border-primary';
-    if (isComboDecaying) return 'border-red-500';
-    return 'border-primary';
+    
+    switch (comboState) {
+      case "active":
+        return 'border-primary';
+      case "warning":
+        return 'border-yellow-500';
+      case "decaying":
+        return 'border-red-500';
+      default:
+        return 'border-primary';
+    }
+  };
+  
+  // Get combo message based on state
+  const getComboMessage = () => {
+    if (!isComboActive) {
+      return "Each click generates hair for Arturo! Click faster for combo bonus!";
+    }
+    
+    switch (comboState) {
+      case "active":
+        return "Combo active! Keep clicking to increase your multiplier!";
+      case "warning":
+        return "Combo will decay soon! Click to maintain it!";
+      case "decaying":
+        return "Combo decaying! Click faster to save it!";
+      default:
+        return "Each click generates hair for Arturo! Click faster for combo bonus!";
+    }
+  };
+  
+  // Get combo icon based on state
+  const getComboIcon = () => {
+    switch (comboState) {
+      case "active":
+        return '🔥';
+      case "warning":
+        return '⚠️';
+      case "decaying":
+        return '⏳';
+      default:
+        return '🔥';
+    }
   };
   
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-center">Click on Arturo&apos;s Head!</CardTitle>
+        <div className="text-center text-sm text-muted-foreground">
+          Total Clicks: <span className="font-bold text-primary">{formatNumber(totalClicks)}</span>
+        </div>
       </CardHeader>
-      <CardContent className="flex flex-col items-center justify-center py-8">
+      <CardContent className="flex-1 flex flex-col items-center justify-center py-2">
         <div 
           className="relative cursor-pointer transition-transform hover:scale-105"
           onClick={handleClick}
         >
           <div className={cn(
-            "relative w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 shadow-xl transition-all duration-300",
+            "relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 shadow-xl transition-all duration-300",
             getBorderColor(),
             getGlowColor(),
             isClicking && "scale-95"
@@ -134,8 +186,10 @@ export default function ClickArea() {
           
           {/* Click power indicator with combo */}
           <div className={cn(
-            "absolute -top-2 -right-2 rounded-full w-auto min-w-10 h-10 px-2 flex items-center justify-center font-bold shadow-md transition-all duration-300",
-            isComboDecaying ? "bg-red-500 text-white" : "bg-primary text-primary-foreground"
+            "absolute -top-2 -right-2 rounded-full w-auto min-w-8 h-8 px-2 flex items-center justify-center font-bold shadow-md transition-all duration-300 text-sm",
+            comboState === "decaying" ? "bg-red-500 text-white" : 
+            comboState === "warning" ? "bg-yellow-500 text-white" : 
+            "bg-primary text-primary-foreground"
           )}>
             +{hairGain}
             {isComboActive && (
@@ -147,26 +201,24 @@ export default function ClickArea() {
           
           {/* Combo indicator - moved outside of Arturo's head */}
           {isComboActive && (
-            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-2xl animate-bounce">
-              {isComboDecaying ? '⚠️' : '🔥'}
+            <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 text-xl animate-bounce">
+              {getComboIcon()}
             </div>
           )}
           
           {/* Combo ring indicator - visual feedback without making Arturo blink */}
           {isComboActive && (
             <div className={cn(
-              "absolute inset-0 rounded-full border-2 pointer-events-none z-5 animate-pulse",
-              isComboDecaying ? "border-red-500" : "border-primary"
+              "absolute inset-0 rounded-full border-2 pointer-events-none z-5",
+              comboState === "active" ? "animate-pulse border-primary" :
+              comboState === "warning" ? "animate-pulse border-yellow-500" :
+              "animate-ping border-red-500"
             )} />
           )}
         </div>
         
-        <p className="mt-6 text-center text-muted-foreground">
-          {isComboActive 
-            ? isComboDecaying
-              ? "Combo decaying! Click faster to maintain it!"
-              : "Combo active! Keep clicking to increase your multiplier!" 
-            : "Each click generates hair for Arturo! Click faster for combo bonus!"}
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          {getComboMessage()}
         </p>
       </CardContent>
     </Card>

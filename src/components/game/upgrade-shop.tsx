@@ -27,11 +27,11 @@ export default function UpgradeShop() {
   };
   
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-center md:text-left">Hair Growth Shop</CardTitle>
-        <div className="flex flex-col items-center mt-2">
-          <p className="text-sm text-muted-foreground mb-2">Purchase Amount</p>
+        <div className="flex flex-col items-center mt-1">
+          <p className="text-sm text-muted-foreground mb-1">Purchase Amount</p>
           <ToggleGroup 
             type="single" 
             value={selectedPurchaseAmount.toString()} 
@@ -45,8 +45,8 @@ export default function UpgradeShop() {
           </ToggleGroup>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+      <CardContent className="flex-1 overflow-hidden p-3 pt-2">
+        <div className="space-y-2 h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
           {upgrades.map(upgrade => (
             <UpgradeCard 
               key={upgrade.id}
@@ -120,10 +120,10 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
     )}
     onClick={() => isAffordable && onBuy(upgrade.id)}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
+      <CardContent className="p-3">
+        <div className="flex items-center gap-2">
           {upgrade.image && (
-            <div className="relative w-12 h-12 flex-shrink-0 rounded-md overflow-hidden">
+            <div className="relative w-10 h-10 flex-shrink-0 rounded-md overflow-hidden">
               <Image
                 src={upgrade.image}
                 alt={upgrade.name}
@@ -135,15 +135,15 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
           
           <div className="flex-1">
             <div className="flex justify-between items-start">
-              <h3 className="font-bold text-lg">{upgrade.name}</h3>
-              <span className="text-xs bg-primary/20 px-2 py-1 rounded-full">
+              <h3 className="font-bold text-base">{upgrade.name}</h3>
+              <span className="text-xs bg-primary/20 px-2 py-0.5 rounded-full">
                 Owned: {upgrade.owned}
               </span>
             </div>
             
-            <p className="text-muted-foreground text-sm">{upgrade.description}</p>
+            <p className="text-muted-foreground text-xs">{upgrade.description}</p>
             
-            <div className="mt-2 flex flex-col gap-1">
+            <div className="mt-1 flex flex-col gap-1">
               {/* Show next level cost for reference */}
               <div className="flex justify-between items-center text-xs text-muted-foreground">
                 <span>Next level: {formatNumber(nextLevelCost)} hair</span>
@@ -152,7 +152,7 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
               
               <div className="flex justify-between items-center">
                 <span className={cn(
-                  "font-semibold text-sm",
+                  "font-semibold text-xs",
                   isAffordable ? "text-green-600" : "text-destructive"
                 )}>
                   {purchaseAmount === 1 
@@ -163,6 +163,7 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
                 <Button 
                   variant={isAffordable ? "default" : "outline"}
                   size="sm"
+                  className="h-7 text-xs"
                   disabled={!isAffordable}
                 >
                   {isAffordable ? getButtonText() : "Can't Afford"}

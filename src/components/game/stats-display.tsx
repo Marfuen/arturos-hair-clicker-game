@@ -13,6 +13,7 @@ export default function StatsDisplay() {
   const maxComboMultiplier = useGameStore(state => state.maxComboMultiplier);
   const lastClickTime = useGameStore(state => state.lastClickTime);
   const comboDecayDelay = useGameStore(state => state.comboDecayDelay);
+  const totalClicks = useGameStore(state => state.totalClicks);
   
   // Format the combo multiplier to 1 decimal place
   const formattedCombo = comboMultiplier.toFixed(1);
@@ -51,12 +52,12 @@ export default function StatsDisplay() {
   };
   
   return (
-    <Card>
-      <CardHeader>
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-center md:text-left">Arturo&apos;s Hair Stats</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardContent className="flex-1 overflow-auto p-3 pt-2">
+        <div className="grid grid-cols-2 gap-2">
           <StatCard 
             title="Hair Count" 
             value={formatNumber(Math.floor(hairCount))}
@@ -74,22 +75,28 @@ export default function StatsDisplay() {
             value={formatNumber(passiveIncome)}
             icon="⏱️"
           />
+          
+          <StatCard 
+            title="Total Clicks" 
+            value={formatNumber(totalClicks)}
+            icon="🖱️"
+          />
         </div>
         
         {/* Combo Multiplier Display */}
-        <div className={`mt-4 p-3 rounded-lg border ${isComboActive ? 'bg-primary/10 border-primary' : 'bg-card border-border'} transition-all duration-300`}>
+        <div className={`mt-3 p-2 rounded-lg border ${isComboActive ? 'bg-primary/10 border-primary' : 'bg-card border-border'} transition-all duration-300`}>
           <div className="flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className={`text-xl ${isComboActive ? 'animate-pulse' : ''}`}>🔥</span>
-              <span className="font-semibold">Combo Multiplier</span>
+            <div className="flex items-center gap-1">
+              <span className={`text-lg ${isComboActive ? 'animate-pulse' : ''}`}>🔥</span>
+              <span className="font-semibold text-sm">Combo Multiplier</span>
             </div>
-            <span className={`text-xl font-bold ${isComboActive ? 'text-primary' : 'text-muted-foreground'}`}>
+            <span className={`text-lg font-bold ${isComboActive ? 'text-primary' : 'text-muted-foreground'}`}>
               {formattedCombo}x
             </span>
           </div>
           
           {/* Combo strength indicator */}
-          <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+          <div className="mt-1 h-2 bg-secondary rounded-full overflow-hidden">
             <div 
               className="h-full bg-primary transition-all duration-300"
               style={{ width: `${comboPercentage}%` }}
@@ -129,10 +136,10 @@ interface StatCardProps {
 
 function StatCard({ title, value, icon }: StatCardProps) {
   return (
-    <div className="bg-card border border-border rounded-lg p-4 flex flex-col items-center justify-center shadow-md">
-      <div className="text-3xl mb-2">{icon}</div>
-      <h3 className="text-lg font-semibold text-card-foreground">{title}</h3>
-      <p className="text-2xl font-bold text-primary">{value}</p>
+    <div className="bg-card border border-border rounded-lg p-2 flex flex-col items-center justify-center shadow-sm">
+      <div className="text-xl mb-0.5">{icon}</div>
+      <h3 className="text-xs font-semibold text-card-foreground">{title}</h3>
+      <p className="text-base font-bold text-primary">{value}</p>
     </div>
   );
 } 
