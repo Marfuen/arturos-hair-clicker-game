@@ -6,6 +6,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SettingsModal } from '@/components/game/settings-modal';
+import { ShareButtons } from '@/components/ui/share-buttons';
 
 export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -32,6 +33,9 @@ export default function Home() {
           <p className="text-lg text-card-foreground">
             Help Arturo grow his hair by clicking on his bald head!
           </p>
+          <div className="mt-4">
+            <ShareButtons />
+          </div>
         </header>
         
         <Suspense fallback={

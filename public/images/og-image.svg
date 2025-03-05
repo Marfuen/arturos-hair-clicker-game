@@ -1,0 +1,32 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#18181b" />
+  
+  <!-- Gradient overlay -->
+  <rect width="1200" height="630" fill="url(#paint0_linear)" />
+  
+  <!-- Arturo's head -->
+  <circle cx="600" cy="315" r="150" fill="#f8fafc" stroke="#f97316" stroke-width="8" />
+  
+  <!-- Hair strands -->
+  <path d="M520 200 Q 550 150, 580 180" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  <path d="M540 190 Q 570 140, 600 170" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  <path d="M560 185 Q 590 135, 620 165" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  <path d="M580 180 Q 610 130, 640 160" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  <path d="M600 180 Q 630 130, 660 160" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  <path d="M620 185 Q 650 135, 680 165" stroke="#f97316" stroke-width="6" stroke-linecap="round" />
+  
+  <!-- Title -->
+  <text x="600" y="500" font-family="Arial, sans-serif" font-size="60" font-weight="bold" fill="white" text-anchor="middle">Arturo's Hair Growth Simulator</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="560" font-family="Arial, sans-serif" font-size="32" fill="#f97316" text-anchor="middle">Click to grow Arturo's hair!</text>
+  
+  <!-- Definitions -->
+  <defs>
+    <linearGradient id="paint0_linear" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f97316" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#18181b" stop-opacity="0.1" />
+    </linearGradient>
+  </defs>
+</svg> 
