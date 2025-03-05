@@ -146,7 +146,7 @@ export default function ClickArea() {
           Total Clicks: <span className="font-bold text-primary">{formatNumber(totalClicks)}</span>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 flex flex-col items-center justify-center py-2">
+      <CardContent className="flex-1 flex flex-col items-center justify-center py-2 overflow-auto scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
         <div 
           className="relative cursor-pointer transition-transform hover:scale-105"
           onClick={handleClick}

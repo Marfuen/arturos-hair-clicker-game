@@ -46,7 +46,7 @@ export default function UpgradeShop() {
         </div>
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden p-3 pt-2">
-        <div className="space-y-2 h-full overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
+        <div className="h-full overflow-y-auto pr-2 space-y-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
           {upgrades.map(upgrade => (
             <UpgradeCard 
               key={upgrade.id}

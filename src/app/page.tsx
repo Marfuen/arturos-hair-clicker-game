@@ -1,15 +1,30 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SettingsModal } from '@/components/game/settings-modal';
 import { ShareButtons } from '@/components/ui/share-buttons';
+import { useToast } from '@/hooks/use-toast';
+import { checkForNewVersion, getVersionMessage, CURRENT_VERSION } from '@/utils/version-utils';
 
 export default function Home() {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const { showVersionUpdateToast } = useToast();
+  
+  // Check for new version on component mount
+  useEffect(() => {
+    // Only run in the browser
+    if (typeof window !== 'undefined') {
+      const hasNewVersion = checkForNewVersion();
+      
+      if (hasNewVersion) {
+        showVersionUpdateToast(getVersionMessage());
+      }
+    }
+  }, [showVersionUpdateToast]);
   
   return (
     <main className="min-h-screen bg-background py-8">
@@ -35,6 +50,9 @@ export default function Home() {
           </p>
           <div className="mt-4">
             <ShareButtons />
+          </div>
+          <div className="mt-2 text-xs text-muted-foreground">
+            Version {CURRENT_VERSION}
           </div>
         </header>
         

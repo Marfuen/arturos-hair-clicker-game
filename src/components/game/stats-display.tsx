@@ -56,7 +56,7 @@ export default function StatsDisplay() {
       <CardHeader className="pb-2 flex-shrink-0">
         <CardTitle className="text-center md:text-left">Arturo&apos;s Hair Stats</CardTitle>
       </CardHeader>
-      <CardContent className="flex-1 overflow-auto p-3 pt-2">
+      <CardContent className="flex-1 overflow-auto p-3 pt-2 scrollbar-thin scrollbar-thumb-primary scrollbar-track-secondary">
         <div className="grid grid-cols-2 gap-2">
           <StatCard 
             title="Hair Count" 
