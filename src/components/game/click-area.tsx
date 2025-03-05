@@ -78,8 +78,7 @@ export default function ClickArea() {
     if (!isComboActive) return 'shadow-primary/0';
     if (isComboDecaying) return 'shadow-red-500/50';
     
-    // Interpolate between yellow and orange as combo increases
-    const intensity = Math.min(1, comboIntensity);
+    // Glow with primary color when combo is active
     return `shadow-primary/50`;
   };
   

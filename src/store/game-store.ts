@@ -207,7 +207,6 @@ export const useGameStore = create<GameState>()(
 
       // Click action
       clickHead: () => {
-        const { clickPower, comboMultiplier } = get();
         set((state: GameState) => ({
           hairCount: state.hairCount + state.clickPower * state.comboMultiplier,
           lastClickTime: Date.now(),
@@ -219,51 +218,37 @@ export const useGameStore = create<GameState>()(
 
       // Increase combo multiplier
       increaseCombo: () => {
-        const {
-          comboMultiplier,
-          maxComboMultiplier,
-          lastClickTime,
-          comboTimeWindow,
-          comboRampUpRate,
-        } = get();
         const now = Date.now();
+        const { lastClickTime, comboTimeWindow } = get();
 
-        // Only increase combo if within the time window
-        if (now - lastClickTime < comboTimeWindow || lastClickTime === 0) {
-          set((state) => ({
-            comboMultiplier: Math.min(
+        // Check if click is within combo window
+        if (now - lastClickTime <= comboTimeWindow) {
+          set((state: GameState) => {
+            // Calculate new combo multiplier, capped at max
+            const newCombo = Math.min(
               state.comboMultiplier + state.comboRampUpRate,
               state.maxComboMultiplier
-            ),
-          }));
+            );
+            return { comboMultiplier: newCombo };
+          });
         }
       },
 
-      // Decay combo multiplier
+      // Decay combo over time
       decayCombo: () => {
-        const {
-          comboMultiplier,
-          comboDecayRate,
-          lastClickTime,
-          comboDecayDelay,
-        } = get();
         const now = Date.now();
+        const { lastClickTime, comboDecayDelay } = get();
 
-        // Only decay if it's been longer than the decay delay since last click
-        if (now - lastClickTime > comboDecayDelay && comboMultiplier > 1) {
-          // Calculate how much time has passed since the decay delay
-          const decayTime = now - lastClickTime - comboDecayDelay;
-
-          // Only start decaying after the delay
-          if (decayTime > 0) {
-            set((state) => ({
-              comboMultiplier: Math.max(
-                1,
-                state.comboMultiplier -
-                  state.comboDecayRate * (decayTime / 1000)
-              ),
-            }));
-          }
+        // Only decay if we haven't clicked for a while
+        if (now - lastClickTime > comboDecayDelay) {
+          set((state: GameState) => {
+            // Reduce combo multiplier, but not below 1
+            const newCombo = Math.max(
+              state.comboMultiplier - state.comboDecayRate * (1 / 60), // Adjust for 60fps
+              1
+            );
+            return { comboMultiplier: newCombo };
+          });
         }
       },
 
@@ -272,11 +257,8 @@ export const useGameStore = create<GameState>()(
         set({ selectedPurchaseAmount: amount });
       },
 
-      // Calculate the cost of multiple upgrades
-      calculateUpgradeCost: (
-        upgradeId: string,
-        amount: PurchaseAmount
-      ): number => {
+      // Calculate upgrade cost
+      calculateUpgradeCost: (upgradeId, amount) => {
         const { upgrades, hairCount } = get();
         const upgrade = upgrades.find((u) => u.id === upgradeId);
 
@@ -284,10 +266,11 @@ export const useGameStore = create<GameState>()(
 
         // If "max", calculate how many we can afford
         if (amount === "max") {
-          let remainingHair = hairCount;
-          let currentLevel = upgrade.owned;
+          const remainingHair = hairCount;
+          const currentLevel = upgrade.owned;
           let purchaseCount = 0;
-          let totalCost = 0;
+          // totalCost is used in the binary search below
+          let cost = 0;
 
           // Use a more efficient algorithm for max calculation
           // This is a binary search approach to find the maximum affordable amount
@@ -296,7 +279,7 @@ export const useGameStore = create<GameState>()(
 
           while (low <= high) {
             const mid = Math.floor((low + high) / 2);
-            const cost = calculateUpgradeCostWithScaling(
+            cost = calculateUpgradeCostWithScaling(
               upgrade.cost,
               upgrade.multiplier,
               currentLevel,
@@ -305,14 +288,19 @@ export const useGameStore = create<GameState>()(
 
             if (cost <= remainingHair) {
               purchaseCount = mid;
-              totalCost = cost;
               low = mid + 1;
             } else {
               high = mid - 1;
             }
           }
 
-          return totalCost;
+          // Return the cost for the maximum affordable amount
+          return calculateUpgradeCostWithScaling(
+            upgrade.cost,
+            upgrade.multiplier,
+            currentLevel,
+            purchaseCount
+          );
         }
 
         // Otherwise calculate cost for the specified amount
@@ -324,8 +312,8 @@ export const useGameStore = create<GameState>()(
         );
       },
 
-      // Buy multiple upgrades
-      buyMultipleUpgrades: (upgradeId: string, amount: PurchaseAmount) => {
+      // Buy multiple upgrades at once
+      buyMultipleUpgrades: (upgradeId, amount) => {
         const { upgrades, hairCount } = get();
         const upgradeIndex = upgrades.findIndex((u) => u.id === upgradeId);
 
@@ -337,8 +325,8 @@ export const useGameStore = create<GameState>()(
 
         // If "max", calculate how many we can afford
         if (amount === "max") {
-          let remainingHair = hairCount;
-          let currentLevel = upgrade.owned;
+          const remainingHair = hairCount;
+          const currentLevel = upgrade.owned;
 
           // Use binary search to find maximum affordable amount
           let low = 0;

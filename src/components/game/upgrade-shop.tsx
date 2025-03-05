@@ -12,7 +12,6 @@ export default function UpgradeShop() {
   const upgrades = useGameStore(state => state.upgrades);
   const hairCount = useGameStore(state => state.hairCount);
   const buyUpgrade = useGameStore(state => state.buyUpgrade);
-  const buyMultipleUpgrades = useGameStore(state => state.buyMultipleUpgrades);
   const calculateUpgradeCost = useGameStore(state => state.calculateUpgradeCost);
   const selectedPurchaseAmount = useGameStore(state => state.selectedPurchaseAmount);
   const setSelectedPurchaseAmount = useGameStore(state => state.setSelectedPurchaseAmount);
@@ -79,11 +78,10 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
   // Calculate next level cost for single purchase
   const nextLevelCost = upgrade.cost * Math.pow(upgrade.multiplier, upgrade.owned);
   
-  // Calculate how many upgrades will be purchased
-  const getPurchaseCount = (): number => {
-    if (purchaseAmount === "max") {
+  // Calculate how many upgrades can be purchased
+  const calculatePurchaseCount = (upgrade: Upgrade, purchaseAmount: PurchaseAmount): number => {
+    if (purchaseAmount === 'max') {
       let count = 0;
-      let totalCost = 0;
       let currentLevel = upgrade.owned;
       let remainingHair = hairCount;
       
@@ -91,7 +89,6 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
         const nextCost = upgrade.cost * Math.pow(upgrade.multiplier, currentLevel);
         if (remainingHair < nextCost) break;
         
-        totalCost += nextCost;
         remainingHair -= nextCost;
         currentLevel++;
         count++;
@@ -106,7 +103,7 @@ function UpgradeCard({ upgrade, hairCount, onBuy, purchaseAmount, calculateCost 
     return Number(purchaseAmount);
   };
   
-  const purchaseCount = getPurchaseCount();
+  const purchaseCount = calculatePurchaseCount(upgrade, purchaseAmount);
   
   // Get button text based on purchase count
   const getButtonText = () => {
